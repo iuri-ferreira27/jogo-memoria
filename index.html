@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Jogo da Memória</title>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #1e1b4b;
+      --surface: #2d2a6e;
+      --card-back: #4338ca;
+      --card-front: #f5f3ff;
+      --accent: #a78bfa;
+      --accent2: #34d399;
+      --text: #f5f3ff;
+      --muted: #a0aec0;
+      --radius: 12px;
+    }
+
+    body {
+      font-family: 'Nunito', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 2rem 1rem;
+    }
+
+    h1 {
+      font-size: 1.8rem;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      margin-bottom: 1.25rem;
+    }
+
+    .stats {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .stat {
+      background: var(--surface);
+      border-radius: var(--radius);
+      padding: 0.6rem 1.4rem;
+      font-size: 0.9rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .stat span { color: var(--accent); font-size: 1.1rem; font-weight: 800; }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      max-width: 380px;
+      width: 100%;
+      margin-bottom: 1.5rem;
+    }
+
+    .card {
+      aspect-ratio: 1;
+      perspective: 600px;
+      cursor: pointer;
+    }
+
+    .card-inner {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      transform-style: preserve-3d;
+      transition: transform 0.4s ease;
+      border-radius: var(--radius);
+    }
+
+    .card.flipped .card-inner { transform: rotateY(180deg); }
+    .card.matched .card-inner { transform: rotateY(180deg); }
+    .card.matched .card-front { background: #1e3a2e; border-color: var(--accent2); }
+
+    .card-back, .card-front {
+      position: absolute;
+      inset: 0;
+      border-radius: var(--radius);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+      font-size: 2rem;
+      border: 2px solid transparent;
+    }
+
+    .card-back {
+      background: var(--card-back);
+      font-size: 1.4rem;
+      color: #6366f1;
+      border-color: #4f46e5;
+    }
+
+    .card-back::after { content: '?'; font-size: 1.5rem; font-weight: 800; color: #818cf8; }
+
+    .card-front {
+      background: var(--card-front);
+      transform: rotateY(180deg);
+      border-color: var(--accent);
+    }
+
+    .btn {
+      padding: 0.75rem 2rem;
+      background: var(--accent);
+      border: none;
+      border-radius: var(--radius);
+      color: #1e1b4b;
+      font-family: 'Nunito', sans-serif;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .btn:hover { opacity: 0.85; transform: scale(1.03); }
+    .btn:active { transform: scale(0.97); }
+
+    .overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(15,12,40,0.88);
+      align-items: center;
+      justify-content: center;
+      z-index: 10;
+      animation: fadeIn 0.3s;
+    }
+
+    .overlay.show { display: flex; }
+
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+    .win-box {
+      background: var(--surface);
+      border-radius: 20px;
+      padding: 2.5rem 2rem;
+      text-align: center;
+      max-width: 300px;
+      border: 2px solid var(--accent);
+      animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    @keyframes popIn {
+      from { transform: scale(0.7); opacity: 0; }
+      to   { transform: scale(1);   opacity: 1; }
+    }
+
+    .win-emoji { font-size: 3.5rem; margin-bottom: 1rem; }
+    .win-box h2 { font-size: 1.6rem; font-weight: 800; margin-bottom: 0.5rem; }
+    .win-box p { color: var(--muted); font-size: 0.95rem; margin-bottom: 1.5rem; line-height: 1.5; }
+
+    .shake { animation: shake 0.35s ease; }
+    @keyframes shake {
+      0%,100% { transform: translateX(0); }
+      25% { transform: translateX(-4px); }
+      75% { transform: translateX(4px); }
+    }
+  </style>
+</head>
+<body>
+  <h1>🃏 Jogo da Memória</h1>
+
+  <div class="stats">
+    <div class="stat">Movimentos <span id="movimentos">0</span></div>
+    <div class="stat">Pares <span id="pares">0</span>/8</div>
+    <div class="stat">⏱ <span id="tempo">00:00</span></div>
+  </div>
+
+  <div class="grid" id="grid"></div>
+  <button class="btn" onclick="iniciar()">Novo Jogo</button>
+
+  <div class="overlay" id="overlay">
+    <div class="win-box">
+      <div class="win-emoji">🎉</div>
+      <h2>Parabéns!</h2>
+      <p id="win-msg">Você completou o jogo!</p>
+      <button class="btn" onclick="fecharOverlay()">Jogar Novamente</button>
+    </div>
+  </div>
+
+  <script>
+    const emojis = ['🍕','🚀','🎸','🌈','🦊','🍉','🎯','⚡'];
+    let cartas = [], viradas = [], pares = 0, movimentos = 0, bloqueado = false;
+    let intervalo = null, segundos = 0;
+
+    function embaralhar(arr) {
+      const a = [...arr, ...arr].map((v, i) => ({ id: i, emoji: v, matched: false }));
+      for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+      }
+      return a;
+    }
+
+    function iniciar() {
+      clearInterval(intervalo);
+      segundos = 0; movimentos = 0; pares = 0; viradas = []; bloqueado = false;
+      cartas = embaralhar(emojis);
+      document.getElementById('movimentos').textContent = 0;
+      document.getElementById('pares').textContent = 0;
+      document.getElementById('tempo').textContent = '00:00';
+      renderGrid();
+      intervalo = setInterval(() => {
+        segundos++;
+        const m = String(Math.floor(segundos / 60)).padStart(2,'0');
+        const s = String(segundos % 60).padStart(2,'0');
+        document.getElementById('tempo').textContent = `${m}:${s}`;
+      }, 1000);
+    }
+
+    function renderGrid() {
+      const grid = document.getElementById('grid');
+      grid.innerHTML = cartas.map((c, i) => `
+        <div class="card" id="card-${i}" onclick="virar(${i})">
+          <div class="card-inner">
+            <div class="card-back"></div>
+            <div class="card-front">${c.emoji}</div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function virar(i) {
+      if (bloqueado || viradas.includes(i) || cartas[i].matched) return;
+      const el = document.getElementById(`card-${i}`);
+      el.classList.add('flipped');
+      viradas.push(i);
+
+      if (viradas.length === 2) {
+        bloqueado = true;
+        movimentos++;
+        document.getElementById('movimentos').textContent = movimentos;
+        const [a, b] = viradas;
+
+        if (cartas[a].emoji === cartas[b].emoji) {
+          cartas[a].matched = cartas[b].matched = true;
+          document.getElementById(`card-${a}`).classList.add('matched');
+          document.getElementById(`card-${b}`).classList.add('matched');
+          pares++;
+          document.getElementById('pares').textContent = pares;
+          viradas = []; bloqueado = false;
+
+          if (pares === 8) {
+            clearInterval(intervalo);
+            setTimeout(mostrarVitoria, 400);
+          }
+        } else {
+          setTimeout(() => {
+            document.getElementById(`card-${a}`).classList.remove('flipped');
+            document.getElementById(`card-${b}`).classList.remove('flipped');
+            document.getElementById(`card-${a}`).classList.add('shake');
+            document.getElementById(`card-${b}`).classList.add('shake');
+            setTimeout(() => {
+              document.getElementById(`card-${a}`).classList.remove('shake');
+              document.getElementById(`card-${b}`).classList.remove('shake');
+            }, 350);
+            viradas = []; bloqueado = false;
+          }, 900);
+        }
+      }
+    }
+
+    function mostrarVitoria() {
+      const m = String(Math.floor(segundos / 60)).padStart(2,'0');
+      const s = String(segundos % 60).padStart(2,'0');
+      document.getElementById('win-msg').textContent =
+        `Você usou ${movimentos} movimentos em ${m}:${s}. Incrível!`;
+      document.getElementById('overlay').classList.add('show');
+    }
+
+    function fecharOverlay() {
+      document.getElementById('overlay').classList.remove('show');
+      iniciar();
+    }
+
+    iniciar();
+  </script>
+</body>
+</html>
