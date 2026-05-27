@@ -13,7 +13,7 @@ Jogo da memória clássico com emojis, cronômetro, contador de movimentos e tel
 - Tela de vitória com seu resultado
 - Design dark mode
 
-## 🛠️ Tecnologias utilizadas
+## 🛠�?Tecnologias utilizadas
 
 - HTML5
 - CSS3 (transform 3D, animações, keyframes)
@@ -23,7 +23,7 @@ Jogo da memória clássico com emojis, cronômetro, contador de movimentos e tel
 
 1. Clone o repositório:
    ```bash
-   git clone https://github.com/SEU-USUARIO/jogo-da-memoria.git
+   git clone https://github.com/iuri-ferreira27/jogo-da-memoria.git
    ```
 
 2. Entre na pasta:
@@ -41,6 +41,6 @@ Jogo da memória clássico com emojis, cronômetro, contador de movimentos e tel
 - `setInterval` para o cronômetro
 - Manipulação de classes CSS dinamicamente
 
-## 👨‍💻 Autor
+## 👨‍�?Autor
 
-Feito por [Seu Nome](https://github.com/SEU-USUARIO)
+Feito por [iuri-ferreira27](https://github.com/iuri-ferreira27)
